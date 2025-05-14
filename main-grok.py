@@ -57,6 +57,14 @@ def start_handler(message):
         markup.add(city)
     bot.send_message(message.chat.id, "Выберите город:", reply_markup=markup)
 
+# Обработчик для кнопки "Выбрать город"
+@bot.message_handler(func=lambda message: message.text == "Выбрать город")
+def choose_city_handler(message):
+    markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    for city in cities:
+        markup.add(city)
+    bot.send_message(message.chat.id, "Выберите город:", reply_markup=markup)
+
 # Обработчик выбора города
 @bot.message_handler(func=lambda message: message.text in cities)
 def city_handler(message):
