@@ -40,6 +40,14 @@ def get_main_menu():
     markup.add("Выбрать город", "Выбрать категории", "Выбрать дату")
     return markup
 
+# Функция для очистки HTML-тегов
+def strip_html_tags(text):
+    clean = re.compile('<.*?>')
+    text = re.sub(clean, '', text)
+    text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'")
+    text = ' '.join(text.split())
+    return text
+
 # Обработчик /start
 @bot.message_handler(commands=['start'])
 def start_handler(message):
@@ -175,7 +183,7 @@ def show_events_handler(message):
         'categories': ','.join(category_slugs),
         'actual_since': int(selected_date.timestamp()),
         'actual_until': int((selected_date + timedelta(days=1)).timestamp()),
-        'fields': 'id,title,description,price',
+        'fields': 'id,title,description,price,place,site_url',
         'page_size': 5,
         'page': user_data[chat_id]["current_page"]
     }
@@ -198,10 +206,21 @@ def show_events_handler(message):
 
         for event in events:
             title = event.get('title', 'Без названия')
-            description = event.get('description', 'Нет описания')[:200] + '...' if len(event.get('description', '')) > 200 else event.get('description', 'Нет описания')
+            description = strip_html_tags(event.get('description', 'Нет описания'))
+            description = description[:200] + '...' if len(description) > 200 else description
             price = event.get('price', 'Цена не указана')
-            message_text = f"🎭 {title}\n💰 {price}\n\n{description}"
-            bot.send_message(chat_id, message_text)
+            place = event.get('place', {})
+            place_name = place.get('title', 'Место не указано') if isinstance(place, dict) else 'Место не указано'
+            site_url = event.get('site_url', '')
+            message_text = (
+                f"🎭 *{title}*\n"
+                f"📍 *Место:* {place_name}\n"
+                f"💰 *Цена:* {price}\n"
+                f"📜 *Описание:* {description}\n"
+            )
+            if site_url:
+                message_text += f"🔗 [Подробнее]({site_url})"
+            bot.send_message(chat_id, message_text, parse_mode='Markdown', disable_web_page_preview=True)
 
         # Добавляем кнопки пагинации
         markup = get_main_menu()
@@ -237,7 +256,7 @@ def next_page_handler(message):
         'categories': ','.join(category_slugs),
         'actual_since': int(selected_date.timestamp()),
         'actual_until': int((selected_date + timedelta(days=1)).timestamp()),
-        'fields': 'id,title,description,price',
+        'fields': 'id,title,description,price,place,site_url',
         'page_size': 5,
         'page': user_data[chat_id]["current_page"]
     }
@@ -256,10 +275,21 @@ def next_page_handler(message):
 
         for event in events:
             title = event.get('title', 'Без названия')
-            description = event.get('description', 'Нет описания')[:200] + '...' if len(event.get('description', '')) > 200 else event.get('description', 'Нет описания')
+            description = strip_html_tags(event.get('description', 'Нет описания'))
+            description = description[:200] + '...' if len(description) > 200 else description
             price = event.get('price', 'Цена не указана')
-            message_text = f"🎭 {title}\n💰 {price}\n\n{description}"
-            bot.send_message(chat_id, message_text)
+            place = event.get('place', {})
+            place_name = place.get('title', 'Место не указано') if isinstance(place, dict) else 'Место не указано'
+            site_url = event.get('site_url', '')
+            message_text = (
+                f"🎭 *{title}*\n"
+                f"📍 *Место:* {place_name}\n"
+                f"💰 *Цена:* {price}\n"
+                f"📜 *Описание:* {description}\n"
+            )
+            if site_url:
+                message_text += f"🔗 [Подробнее]({site_url})"
+            bot.send_message(chat_id, message_text, parse_mode='Markdown', disable_web_page_preview=True)
 
         # Обновляем кнопки пагинации
         markup = get_main_menu()
