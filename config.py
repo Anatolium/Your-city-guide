@@ -1,1 +1,1 @@
-API_TOKEN = "<API TOKEN телеграм-бота>"
+BOT_TOKEN = "<TOKEN телеграм-бота>"
